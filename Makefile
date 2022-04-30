@@ -25,10 +25,10 @@ clean:
 	flutter pub get
 
 build-web:
-	rm -rf build-output/web
+	rm -rf build-output
 	flutter build web --release
-	cp -r build/web/. build-output/web
+	cp -r build/web/. build-output
 
 release-web:
 	@echo "Release Web"
-	aws s3 sync public s3://samples.flutter.de --delete --acl public-read
+	aws s3 sync build-output s3://samples.flutter.de --delete

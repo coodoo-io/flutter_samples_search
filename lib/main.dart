@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:samples/sample.dart';
-/// Run flutter build web --release --web-renderer canvaskit to release
 void main() {
   runApp(const App());
 }
