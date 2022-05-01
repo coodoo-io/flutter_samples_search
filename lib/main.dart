@@ -2,10 +2,13 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:samples/sample.dart';
+import 'package:flutter/services.dart';
+
 void main() {
   runApp(const App());
 }
 
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 class App extends StatelessWidget {
   const App({Key? key}) : super(key: key);
 
@@ -13,6 +16,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return MaterialApp(
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
       title: 'Flutter Samples',
       theme: ThemeData.light().copyWith(scaffoldBackgroundColor: Colors.grey[50]),
@@ -20,6 +24,7 @@ class App extends StatelessWidget {
     );
   }
 }
+
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -152,8 +157,7 @@ class SampleRow extends StatelessWidget {
                       style: theme.textTheme.caption?.copyWith(
                         fontSize: 11,
                       )),
-                  label: Text(sample.sampleLibrary,
-                      style: theme.textTheme.caption?.copyWith(fontSize: 11, fontWeight: FontWeight.bold)),
+                  label: Text(sample.sampleLibrary, style: theme.textTheme.caption?.copyWith(fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
                 Chip(
                   labelPadding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
@@ -163,9 +167,22 @@ class SampleRow extends StatelessWidget {
                       style: theme.textTheme.caption?.copyWith(
                         fontSize: 11,
                       )),
-                  label: SelectableText(sample.id,
-                      toolbarOptions: const ToolbarOptions(copy: true, selectAll: true, cut: false, paste: false),
-                      style: theme.textTheme.caption?.copyWith(fontSize: 11, fontWeight: FontWeight.bold)),
+                  label: SelectableText(
+                    sample.id,
+                    toolbarOptions: const ToolbarOptions(copy: true, selectAll: true, cut: false, paste: false),
+                    style: theme.textTheme.caption?.copyWith(fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                  deleteIcon: const Icon(
+                    Icons.copy,
+                    size: 12,
+                  ),
+                  deleteButtonTooltipMessage: 'Copy ID to clipboard',
+                  onDeleted: () {
+                    Clipboard.setData(ClipboardData(text: sample.id)).then((_) {
+                      rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
+                      rootScaffoldMessengerKey.currentState!.showSnackBar(SnackBar(content: Text("Sample ID copied to clipboard: ${sample.id}")));
+                    });
+                  },
                 ),
               ],
             ),
