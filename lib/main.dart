@@ -21,7 +21,7 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Samples',
       theme: ThemeData.light().copyWith(
-        scaffoldBackgroundColor: Colors.grey[50],
+        scaffoldBackgroundColor: const Color(0xfff9f9f9),
         colorScheme: ThemeData().colorScheme.copyWith(
               primary: Colors.purple,
             ),
@@ -166,7 +166,7 @@ class SampleRow extends StatelessWidget {
 
     final theme = Theme.of(context);
     return Container(
-        margin: const EdgeInsets.only(top: 20),
+        margin: const EdgeInsets.only(top: 20, left: 3, right: 3),
         padding: EdgeInsets.zero,
         decoration: const BoxDecoration(
           color: Colors.white,
