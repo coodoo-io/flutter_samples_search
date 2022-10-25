@@ -22,6 +22,9 @@ class App extends StatelessWidget {
       title: 'Flutter Samples',
       theme: ThemeData.light().copyWith(
         scaffoldBackgroundColor: Colors.grey[50],
+        colorScheme: ThemeData().colorScheme.copyWith(
+              primary: Colors.purple,
+            ),
         textTheme: Theme.of(context).textTheme.apply(
               fontSizeFactor: 1.15,
             ),
@@ -44,6 +47,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final TextEditingController searchController = TextEditingController();
   List<Sample> sampleList = [];
   List<Sample> searchList = [];
   Timer? _debounce;
@@ -82,50 +86,58 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Container(
         padding: const EdgeInsets.symmetric(vertical: 30),
-        clipBehavior: Clip.none,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 constraints: BoxConstraints(maxWidth: maxWidth),
                 child: TextField(
+                  controller: searchController,
                   onChanged: (value) {
                     searchData(value.trim().toLowerCase());
                   },
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: "Search for Flutter Samples...",
-                    prefixIcon: Icon(Icons.search),
+                    prefixIcon: const Icon(Icons.search),
                     filled: true,
                     fillColor: Colors.white,
-                    focusedBorder: OutlineInputBorder(
+                    focusedBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.purple, width: 2.0),
                       borderRadius: BorderRadius.all(Radius.circular(7.0)),
                     ),
-                    enabledBorder: OutlineInputBorder(
+                    enabledBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(7.0)),
                       borderSide: BorderSide(color: Color(0xffefefef), width: 2.0),
                     ),
+                    suffixIcon: searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              searchController.clear();
+                              searchData("");
+                              setState(() {});
+                            },
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              if (searchList.isNotEmpty)
-                Expanded(
-                  child: SizedBox(
-                    width: maxWidth,
-                    child: ListView.builder(
-                        clipBehavior: Clip.none,
-                        itemCount: searchList.length,
-                        itemBuilder: (context, index) {
-                          final sample = searchList[index];
-                          return SampleRow(sample: sample);
-                        }),
-                  ),
-                )
-              else
-                const Center(child: Text('No results.'))
+              const SizedBox(height: 15),
+              searchList.isNotEmpty
+                  ? Flexible(
+                      child: ListView.builder(
+                          itemCount: searchList.length,
+                          primary: false,
+                          itemBuilder: (context, index) {
+                            final sample = searchList[index];
+                            return Align(
+                              child: SizedBox(width: maxWidth, child: SampleRow(sample: sample)),
+                            );
+                          }),
+                    )
+                  : const Center(child: Text('No results.'))
             ],
           ),
         ),
@@ -150,8 +162,7 @@ class SampleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String sampleId = sample.id;
-    String createFlutterSampleCmd = 'flutter create --sample=$sampleId app_name';
+    final String createFlutterSampleCmd = 'flutter create --sample=${sample.id} app_name';
 
     final theme = Theme.of(context);
     return Container(
@@ -192,7 +203,7 @@ class SampleRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                        child: SelectableText(sample.description.replaceAll("\n", " "),
+                        child: SelectableText(sample.description,
                             style: theme.textTheme.caption?.copyWith(height: 1.5, color: const Color(0xff676767)))),
                     // Container(
                     //   width: 190.0,
@@ -213,16 +224,16 @@ class SampleRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 10),
             decoration: const BoxDecoration(
-                border: Border(
-                  top: BorderSide(width: 1.0, color: Color(0xffefefef)),
-                ),
-                ),
+              border: Border(
+                top: BorderSide(width: 1.0, color: Color(0xffefefef)),
+              ),
+            ),
             child: InkWell(
               onTap: () {
-                Clipboard.setData(ClipboardData(text: sampleId)).then((_) {
+                Clipboard.setData(ClipboardData(text: sample.id)).then((_) {
                   rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
                   rootScaffoldMessengerKey.currentState!
-                      .showSnackBar(SnackBar(content: Text("🔗 $sampleId copied to your clipboard")));
+                      .showSnackBar(SnackBar(content: Text("🔗 ${sample.id} copied to your clipboard")));
                 });
               },
               child: Row(
@@ -235,7 +246,7 @@ class SampleRow extends StatelessWidget {
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
-                      sampleId,
+                      sample.id,
                       style: const TextStyle(
                           fontFamily: "Courier New", letterSpacing: .5, fontSize: 11, color: Colors.purple),
                     ),
@@ -247,16 +258,16 @@ class SampleRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 10),
             decoration: const BoxDecoration(
-                border: Border(
-                  top: BorderSide(width: 1.0, color: Color(0xffefefef)),
-                ),
-                ),
+              border: Border(
+                top: BorderSide(width: 1.0, color: Color(0xffefefef)),
+              ),
+            ),
             child: InkWell(
               onTap: () {
-                Clipboard.setData(ClipboardData(text: sampleId)).then((_) {
+                Clipboard.setData(ClipboardData(text: sample.id)).then((_) {
                   rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
-                  rootScaffoldMessengerKey.currentState!
-                      .showSnackBar(SnackBar(content: Text("👉 Flutter command for `$sampleId` copied to your clipboard")));
+                  rootScaffoldMessengerKey.currentState!.showSnackBar(
+                      SnackBar(content: Text("👉 Flutter command for `${sample.id}` copied to your clipboard")));
                 });
               },
               child: Row(
