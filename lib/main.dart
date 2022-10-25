@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:samples/sample.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const App());
@@ -21,7 +20,12 @@ class App extends StatelessWidget {
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
       title: 'Flutter Samples',
-      theme: ThemeData.light().copyWith(scaffoldBackgroundColor: Colors.grey[50]),
+      theme: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: Colors.grey[50],
+        textTheme: Theme.of(context).textTheme.apply(
+              fontSizeFactor: 1.15,
+            ),
+      ),
       home: HomePage(theme: theme),
     );
   }
@@ -43,6 +47,7 @@ class _HomePageState extends State<HomePage> {
   List<Sample> sampleList = [];
   List<Sample> searchList = [];
   Timer? _debounce;
+  final double maxWidth = 960.0;
 
   Future<void> fetchData() async {
     String data = await DefaultAssetBundle.of(context).loadString("assets/samples.json");
@@ -57,7 +62,9 @@ class _HomePageState extends State<HomePage> {
   void searchData(String searchTerm) {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      final filteredList = sampleList.where((s) => s.element.toLowerCase().startsWith(searchTerm) || s.id.toLowerCase().startsWith(searchTerm)).toList();
+      final filteredList = sampleList
+          .where((s) => s.element.toLowerCase().startsWith(searchTerm) || s.id.toLowerCase().startsWith(searchTerm))
+          .toList();
       setState(() {
         searchList = filteredList;
       });
@@ -75,37 +82,41 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Container(
         padding: const EdgeInsets.symmetric(vertical: 30),
+        clipBehavior: Clip.none,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Flutter Samples', style: widget.theme.textTheme.headline6?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 30),
               Container(
-                padding: const EdgeInsets.all(20.0),
-                constraints: const BoxConstraints(maxWidth: 800),
+                constraints: BoxConstraints(maxWidth: maxWidth),
                 child: TextField(
                   onChanged: (value) {
                     searchData(value.trim().toLowerCase());
                   },
-                  autofocus: true,
                   decoration: const InputDecoration(
-                    hintText: "Search by title or id",
+                    hintText: "Search for Flutter Samples...",
                     prefixIcon: Icon(Icons.search),
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.purple, width: 2.0),
                       borderRadius: BorderRadius.all(Radius.circular(7.0)),
-                      borderSide: BorderSide(color: Colors.grey),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(7.0)),
+                      borderSide: BorderSide(color: Color(0xffefefef), width: 2.0),
                     ),
                   ),
                 ),
               ),
+              const SizedBox(height: 10),
               if (searchList.isNotEmpty)
                 Expanded(
                   child: SizedBox(
-                    width: 800,
+                    width: maxWidth,
                     child: ListView.builder(
+                        clipBehavior: Clip.none,
                         itemCount: searchList.length,
                         itemBuilder: (context, index) {
                           final sample = searchList[index];
@@ -140,57 +151,39 @@ class SampleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String sampleId = sample.id;
-    String sampleProjectName = sampleId.replaceAll('.', '_').toLowerCase();
-    String createFlutterSampleCmd = 'flutter create --sample=$sampleId $sampleProjectName';
+    String createFlutterSampleCmd = 'flutter create --sample=$sampleId app_name';
 
     final theme = Theme.of(context);
-    return Material(
-      elevation: 1,
-      child: Column(
-        children: [
+    return Container(
+        margin: const EdgeInsets.only(top: 20),
+        padding: EdgeInsets.zero,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(5)),
+          boxShadow: [
+            BoxShadow(color: Color(0xffefefef), spreadRadius: 0, blurRadius: 5, offset: Offset(1, 1)),
+          ],
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Container(
-              color: Colors.white,
-              margin: const EdgeInsets.only(top: 10),
-              padding: const EdgeInsets.all(20),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 10),
+            child: Column(
+              children: [
                 Row(
                   children: [
-                    SelectableText(sample.element, style: theme.textTheme.subtitle2?.copyWith(fontWeight: FontWeight.bold)),
-                    Chip(
-                      labelPadding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
-                      backgroundColor: Colors.transparent,
-                      shape: const StadiumBorder(side: BorderSide(color: Colors.white)),
-                      avatar: Text("Type",
-                          style: theme.textTheme.caption?.copyWith(
-                            fontSize: 11,
-                          )),
-                      label: Text(sample.sampleLibrary, style: theme.textTheme.caption?.copyWith(fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                    Chip(
-                      labelPadding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
-                      backgroundColor: Colors.transparent,
-                      shape: const StadiumBorder(side: BorderSide(color: Colors.white)),
-                      avatar: Text("ID",
-                          style: theme.textTheme.caption?.copyWith(
-                            fontSize: 11,
-                          )),
-                      label: SelectableText(
-                        sample.id,
-                        toolbarOptions: const ToolbarOptions(copy: true, selectAll: true, cut: false, paste: false),
-                        style: theme.textTheme.caption?.copyWith(fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                      deleteIcon: const Icon(
-                        Icons.copy,
-                        size: 12,
-                      ),
-                      deleteButtonTooltipMessage: 'Copy ID to clipboard',
-                      onDeleted: () {
-                        Clipboard.setData(ClipboardData(text: sample.id)).then((_) {
-                          rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
-                          rootScaffoldMessengerKey.currentState!.showSnackBar(SnackBar(content: Text("Sample ID copied to clipboard: $sampleId")));
-                        });
-                      },
-                    ),
+                    SelectableText(sample.element,
+                        style: theme.textTheme.subtitle2?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 5),
+                    Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                            color: Colors.grey.shade100, borderRadius: const BorderRadius.all(Radius.circular(50))),
+                        child: Row(
+                          children: [
+                            Text(sample.sampleLibrary,
+                                style: theme.textTheme.caption?.copyWith(fontSize: 11, fontWeight: FontWeight.bold)),
+                          ],
+                        )),
                   ],
                 ),
                 const SizedBox(height: 5),
@@ -198,51 +191,93 @@ class SampleRow extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: SelectableText(sample.description, style: theme.textTheme.caption)),
-                    Container(
-                      width: 190.0,
-                      height: 100.0,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        image: DecorationImage(
-                          fit: BoxFit.fitHeight,
-                          image: Image.asset('assets/screenshots/${sample.id}.png').image,
-                        ),
-                      ),
-                    ),
+                    Expanded(
+                        child: SelectableText(sample.description.replaceAll("\n", " "),
+                            style: theme.textTheme.caption?.copyWith(height: 1.5, color: const Color(0xff676767)))),
+                    // Container(
+                    //   width: 190.0,
+                    //   height: 100.0,
+                    //   decoration: BoxDecoration(
+                    //     shape: BoxShape.rectangle,
+                    //     image: DecorationImage(
+                    //       fit: BoxFit.fitHeight,
+                    //       image: Image.asset('assets/screenshots/${sample.id}.png').image,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
-                
-              ])),
-
-                Container(
-                  color: Colors.grey.shade100,
-                  padding: const EdgeInsets.only(left:20, right:20, bottom:10, top:10),
-                  child: InkWell(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: createFlutterSampleCmd)).then((_) {
-                            rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
-                            rootScaffoldMessengerKey.currentState!.showSnackBar(const SnackBar(content: Text("Flutter create sample command copied.")));
-                          });
-                    },
-                    child: Row(
-                      children: [
-                          const Icon(Icons.copy, size: 12,),
-                          const SizedBox(width: 5),
-                        Expanded(
-                          child: Text(
-                            createFlutterSampleCmd,
-                            style: GoogleFonts.courierPrime(
-                              textStyle: const TextStyle(letterSpacing: .5, fontSize: 11),
-                            ),
-                          ),
-                        ),
-                      ],
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 10),
+            decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(width: 1.0, color: Color(0xffefefef)),
+                ),
+                ),
+            child: InkWell(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: sampleId)).then((_) {
+                  rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
+                  rootScaffoldMessengerKey.currentState!
+                      .showSnackBar(SnackBar(content: Text("🔗 $sampleId copied to your clipboard")));
+                });
+              },
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.copy,
+                    size: 13,
+                    color: Colors.black,
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      sampleId,
+                      style: const TextStyle(
+                          fontFamily: "Courier New", letterSpacing: .5, fontSize: 11, color: Colors.purple),
                     ),
                   ),
-                )
-        ],
-      ),
-    );
+                ],
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 10),
+            decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(width: 1.0, color: Color(0xffefefef)),
+                ),
+                ),
+            child: InkWell(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: sampleId)).then((_) {
+                  rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
+                  rootScaffoldMessengerKey.currentState!
+                      .showSnackBar(SnackBar(content: Text("👉 Flutter command for `$sampleId` copied to your clipboard")));
+                });
+              },
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.copy,
+                    size: 13,
+                    color: Colors.black,
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      createFlutterSampleCmd,
+                      style: const TextStyle(
+                          fontFamily: "monospace", letterSpacing: .5, fontSize: 11, color: Colors.purple),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        ]));
   }
 }
