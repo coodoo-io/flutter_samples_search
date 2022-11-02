@@ -50,6 +50,7 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController searchController = TextEditingController();
   List<Sample> sampleList = [];
   List<Sample> searchList = [];
+  int count = 0;
   Timer? _debounce;
   final double maxWidth = 960.0;
 
@@ -60,6 +61,8 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       jsonResult.forEach((json) => sampleList.add(Sample.fromJson(json)));
       searchList = sampleList;
+      searchList.sort((a, b) => a.element.toLowerCase().compareTo(b.element.toLowerCase()));
+      count = searchList.length;
     });
   }
 
@@ -67,7 +70,11 @@ class _HomePageState extends State<HomePage> {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       final filteredList = sampleList
-          .where((s) => s.element.toLowerCase().startsWith(searchTerm) || s.id.toLowerCase().startsWith(searchTerm))
+          .where((s) =>
+              s.element.toLowerCase().contains(searchTerm) ||
+              s.id.toLowerCase().startsWith(searchTerm) ||
+              s.sampleLibrary.toLowerCase().contains(searchTerm) ||
+              s.description.toLowerCase().contains(searchTerm))
           .toList();
       setState(() {
         searchList = filteredList;
@@ -99,7 +106,7 @@ class _HomePageState extends State<HomePage> {
                     searchData(value.trim().toLowerCase());
                   },
                   decoration: InputDecoration(
-                    hintText: "Search for Flutter Samples...",
+                    hintText: "Search in $count Flutter Samples...",
                     prefixIcon: const Icon(Icons.search),
                     filled: true,
                     fillColor: Colors.white,
@@ -152,7 +159,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class SampleRow extends StatelessWidget {
+class SampleRow extends StatefulWidget {
   const SampleRow({
     Key? key,
     required this.sample,
@@ -161,9 +168,21 @@ class SampleRow extends StatelessWidget {
   final Sample sample;
 
   @override
-  Widget build(BuildContext context) {
-    final String createFlutterSampleCmd = 'flutter create --sample=${sample.id} app_name';
+  State<SampleRow> createState() => _SampleRowState();
+}
 
+class _SampleRowState extends State<SampleRow> {
+  late final String createFlutterSampleCmd;
+
+  @override
+  void initState() {
+    createFlutterSampleCmd =
+        'flutter create --sample=${widget.sample.id} ${widget.sample.element.toLowerCase()}${widget.sample.id.substring(widget.sample.id.length - 1)}';
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
         margin: const EdgeInsets.only(top: 20, left: 3, right: 3),
@@ -182,7 +201,7 @@ class SampleRow extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    SelectableText(sample.element,
+                    SelectableText(widget.sample.element,
                         style: theme.textTheme.subtitle2?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(width: 5),
                     Container(
@@ -191,7 +210,7 @@ class SampleRow extends StatelessWidget {
                             color: Colors.grey.shade100, borderRadius: const BorderRadius.all(Radius.circular(50))),
                         child: Row(
                           children: [
-                            Text(sample.sampleLibrary,
+                            Text(widget.sample.sampleLibrary,
                                 style: theme.textTheme.caption?.copyWith(fontSize: 11, fontWeight: FontWeight.bold)),
                           ],
                         )),
@@ -203,7 +222,7 @@ class SampleRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                        child: SelectableText(sample.description,
+                        child: SelectableText(widget.sample.description,
                             style: theme.textTheme.caption?.copyWith(height: 1.5, color: const Color(0xff676767)))),
                     // Container(
                     //   width: 190.0,
@@ -230,10 +249,10 @@ class SampleRow extends StatelessWidget {
             ),
             child: InkWell(
               onTap: () {
-                Clipboard.setData(ClipboardData(text: sample.id)).then((_) {
+                Clipboard.setData(ClipboardData(text: widget.sample.id)).then((_) {
                   rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
                   rootScaffoldMessengerKey.currentState!
-                      .showSnackBar(SnackBar(content: Text("🔗 ${sample.id} copied to your clipboard")));
+                      .showSnackBar(SnackBar(content: Text("🔗 ${widget.sample.id} copied to your clipboard")));
                 });
               },
               child: Row(
@@ -246,7 +265,7 @@ class SampleRow extends StatelessWidget {
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
-                      sample.id,
+                      widget.sample.id,
                       style: const TextStyle(
                           fontFamily: "Courier New", letterSpacing: .5, fontSize: 11, color: Colors.purple),
                     ),
@@ -264,10 +283,10 @@ class SampleRow extends StatelessWidget {
             ),
             child: InkWell(
               onTap: () {
-                Clipboard.setData(ClipboardData(text: sample.id)).then((_) {
+                Clipboard.setData(ClipboardData(text: createFlutterSampleCmd)).then((_) {
                   rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
                   rootScaffoldMessengerKey.currentState!.showSnackBar(
-                      SnackBar(content: Text("👉 Flutter command for `${sample.id}` copied to your clipboard")));
+                      SnackBar(content: Text("👉 Flutter command for `${widget.sample.id}` copied to your clipboard")));
                 });
               },
               child: Row(
