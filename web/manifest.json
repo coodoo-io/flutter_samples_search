@@ -1,11 +1,11 @@
 {
-    "name": "samples",
-    "short_name": "samples",
+    "name": "Hidden Flutter Samples Search UI",
+    "short_name": "Flutter Samples",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Save time and work by using the hidden Flutter Sample search UI that come complete with all the widgets you will need.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
