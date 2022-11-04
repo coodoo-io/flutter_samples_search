@@ -27,6 +27,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return MaterialApp(
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
@@ -40,7 +41,12 @@ class App extends StatelessWidget {
               fontSizeFactor: 1.15,
             ),
       ),
-      home: HomePage(theme: theme, analytics: analytics, observer: observer),
+      home: HomePage(
+        theme: theme,
+        analytics: analytics,
+        observer: observer,
+        searchParam: Uri.base.queryParameters["q"] ?? '',
+      ),
     );
   }
 }
@@ -51,11 +57,13 @@ class HomePage extends StatefulWidget {
     required this.theme,
     required this.analytics,
     required this.observer,
+    required this.searchParam,
   }) : super(key: key);
 
   final ThemeData theme;
   final FirebaseAnalytics analytics;
   final FirebaseAnalyticsObserver observer;
+  final String? searchParam;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -79,6 +87,11 @@ class _HomePageState extends State<HomePage> {
       searchList.sort((a, b) => a.element.toLowerCase().compareTo(b.element.toLowerCase()));
       count = searchList.length;
     });
+
+    if (widget.searchParam != '') {
+      searchData(widget.searchParam!);
+      setState(() => searchController.text = widget.searchParam!);
+    }
   }
 
   void searchData(String searchTerm) {
