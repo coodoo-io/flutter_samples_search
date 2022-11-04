@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:samples/library_chips.dart';
 import 'package:samples/firebase_options.dart';
 import 'package:samples/sample.dart';
 import 'package:flutter/services.dart';
@@ -61,9 +62,10 @@ class HomePage extends StatefulWidget {
   }) : super(key: key);
 
   final ThemeData theme;
+  final String? searchParam;
+
   final FirebaseAnalytics analytics;
   final FirebaseAnalyticsObserver observer;
-  final String? searchParam;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -77,6 +79,24 @@ class _HomePageState extends State<HomePage> {
   Timer? _debounce;
   final double maxWidth = 960.0;
 
+  List<String> libraries = [
+    'material',
+    'widgets',
+    'cupertino',
+    'dart:ui',
+    'services',
+    'rendering',
+    'chip',
+    'focus_manager',
+    'painting',
+    'animation',
+    'gestures',
+    'scrollbar',
+  ];
+  List<bool> selectedLibrariesValue = [];
+
+  List<String> selectedLibraries = [];
+
   Future<void> fetchData() async {
     String data = await DefaultAssetBundle.of(context).loadString("assets/samples.json");
     final jsonResult = json.decode(data);
@@ -87,28 +107,23 @@ class _HomePageState extends State<HomePage> {
       searchList.sort((a, b) => a.element.toLowerCase().compareTo(b.element.toLowerCase()));
       count = searchList.length;
     });
-
-    if (widget.searchParam != '') {
-      searchData(widget.searchParam!);
-      setState(() => searchController.text = widget.searchParam!);
-    }
   }
 
   void searchData(String searchTerm) {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
-      final filteredList = sampleList
-          .where((s) =>
-              s.element.toLowerCase().contains(searchTerm) ||
-              s.id.toLowerCase().startsWith(searchTerm) ||
-              s.sampleLibrary.toLowerCase().contains(searchTerm) ||
-              s.description.toLowerCase().contains(searchTerm))
+      final libraryList = sampleList
+          .where((s) => (selectedLibraries.isEmpty || selectedLibraries.contains(s.sampleLibrary.toLowerCase())))
+          .toList();
+      final filteredList = libraryList
+          .where((s) => ((selectedLibraries.isEmpty || selectedLibraries.contains(s.sampleLibrary.toLowerCase())) &&
+                  s.element.toLowerCase().contains(searchTerm.toLowerCase()) ||
+              s.id.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+              s.description.toLowerCase().contains(searchTerm.toLowerCase())))
           .toList();
       await widget.analytics.logEvent(
         name: 'search samples',
-        parameters: <String, dynamic>{
-          'searchTerm': searchTerm,
-        },
+        parameters: <String, dynamic>{'searchTerm': searchTerm, 'selectedLibraries': selectedLibraries},
       );
       setState(() {
         searchList = filteredList;
@@ -116,10 +131,37 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void getQueryParam() {
+    if (widget.searchParam != '') {
+      searchData(widget.searchParam!);
+      setState(() => searchController.text = widget.searchParam!);
+    }
+  }
+
+  void initLibraryChips() async {
+    for (int i = 0; i < libraries.length; i++) {
+      selectedLibrariesValue.add(false);
+    }
+  }
+
+  void setLibrary(int index, bool value) {
+    setState(() {
+      selectedLibrariesValue[index] = value;
+      if (value) {
+        selectedLibraries.add(libraries[index]);
+      } else {
+        selectedLibraries.remove(libraries[index]);
+      }
+    });
+    searchData(searchController.text);
+  }
+
   @override
   void initState() {
     super.initState();
+    initLibraryChips();
     fetchData();
+    getQueryParam();
   }
 
   @override
@@ -165,7 +207,15 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
+              Container(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: LibraryChips(
+                  libraries: libraries,
+                  selected: selectedLibrariesValue,
+                  onSelected: (index, value) => setLibrary(index, value),
+                ),
+              ),
               searchList.isNotEmpty
                   ? Flexible(
                       child: ListView.builder(
@@ -185,7 +235,7 @@ class _HomePageState extends State<HomePage> {
                             );
                           }),
                     )
-                  : const Center(child: Text('No results.'))
+                  : const Padding(padding: EdgeInsets.only(top: 10), child: Center(child: Text('No results.')))
             ],
           ),
         ),
@@ -357,161 +407,3 @@ class SampleRow extends StatelessWidget {
         ]));
   }
 }
-
-// class SampleRow extends StatefulWidget {
-//   const SampleRow({
-//     Key? key,
-//     required this.sample,
-//     required this.analytics,
-//     required this.observer,
-//   }) : super(key: key);
-
-//   final FirebaseAnalytics analytics;
-//   final FirebaseAnalyticsObserver observer;
-
-//   final Sample sample;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     var createFlutterSampleCmd =
-//         'flutter create --sample=${sample.id} ${sample.element.toLowerCase()}${sample.id.substring(sample.id.length - 1)}';
-//     final theme = Theme.of(context);
-//     return Container(
-//         margin: const EdgeInsets.only(top: 20, left: 3, right: 3),
-//         padding: EdgeInsets.zero,
-//         decoration: const BoxDecoration(
-//           color: Colors.white,
-//           borderRadius: BorderRadius.all(Radius.circular(5)),
-//           boxShadow: [
-//             BoxShadow(color: Color(0xffefefef), spreadRadius: 0, blurRadius: 5, offset: Offset(1, 1)),
-//           ],
-//         ),
-//         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-//           Container(
-//             padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 10),
-//             child: Column(
-//               children: [
-//                 Row(
-//                   children: [
-//                     SelectableText(sample.element,
-//                         style: theme.textTheme.subtitle2?.copyWith(fontWeight: FontWeight.bold)),
-//                     const SizedBox(width: 5),
-//                     Container(
-//                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//                         decoration: BoxDecoration(
-//                             color: Colors.grey.shade100, borderRadius: const BorderRadius.all(Radius.circular(50))),
-//                         child: Row(
-//                           children: [
-//                             Text(sample.sampleLibrary,
-//                                 style: theme.textTheme.caption?.copyWith(fontSize: 11, fontWeight: FontWeight.bold)),
-//                           ],
-//                         )),
-//                   ],
-//                 ),
-//                 const SizedBox(height: 5),
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Expanded(
-//                         child: SelectableText(sample.description,
-//                             style: theme.textTheme.caption?.copyWith(height: 1.5, color: const Color(0xff676767)))),
-//                     // Container(
-//                     //   width: 190.0,
-//                     //   height: 100.0,
-//                     //   decoration: BoxDecoration(
-//                     //     shape: BoxShape.rectangle,
-//                     //     image: DecorationImage(
-//                     //       fit: BoxFit.fitHeight,
-//                     //       image: Image.asset('assets/screenshots/${sample.id}.png').image,
-//                     //     ),
-//                     //   ),
-//                     // ),
-//                   ],
-//                 ),
-//               ],
-//             ),
-//           ),
-//           Container(
-//             padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 10),
-//             decoration: const BoxDecoration(
-//               border: Border(
-//                 top: BorderSide(width: 1.0, color: Color(0xffefefef)),
-//               ),
-//             ),
-//             child: InkWell(
-//               onTap: () async {
-//                 Clipboard.setData(ClipboardData(text: widget.sample.id)).then((_) async {
-//                   rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
-//                   rootScaffoldMessengerKey.currentState!
-//                       .showSnackBar(SnackBar(content: Text("🔗 ${widget.sample.id} copied to your clipboard")));
-//                   await widget.analytics.logEvent(
-//                     name: 'copy id',
-//                     parameters: <String, dynamic>{
-//                       'sample-id': widget.sample.id,
-//                     },
-//                   );
-//                 });
-//               },
-//               child: Row(
-//                 children: [
-//                   const Icon(
-//                     Icons.copy,
-//                     size: 13,
-//                     color: Colors.black,
-//                   ),
-//                   const SizedBox(width: 5),
-//                   Expanded(
-//                     child: Text(
-//                       sample.id,
-//                       style: const TextStyle(
-//                           fontFamily: "Courier New", letterSpacing: .5, fontSize: 11, color: Colors.purple),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//           Container(
-//             padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 10),
-//             decoration: const BoxDecoration(
-//               border: Border(
-//                 top: BorderSide(width: 1.0, color: Color(0xffefefef)),
-//               ),
-//             ),
-//             child: InkWell(
-//               onTap: () {
-//                 Clipboard.setData(ClipboardData(text: createFlutterSampleCmd)).then((_) async {
-//                   rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
-//                   rootScaffoldMessengerKey.currentState!.showSnackBar(
-//                       SnackBar(content: Text("👉 Flutter command for `${widget.sample.id}` copied to your clipboard")));
-//                   await widget.analytics.logEvent(
-//                     name: 'copy command',
-//                     parameters: <String, dynamic>{
-//                       'sample-id': widget.sample.id,
-//                     },
-//                   );
-//                 });
-//               },
-//               child: Row(
-//                 children: [
-//                   const Icon(
-//                     Icons.copy,
-//                     size: 13,
-//                     color: Colors.black,
-//                   ),
-//                   const SizedBox(width: 5),
-//                   Expanded(
-//                     child: Text(
-//                       createFlutterSampleCmd,
-//                       style: const TextStyle(
-//                           fontFamily: "monospace", letterSpacing: .5, fontSize: 11, color: Colors.purple),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           )
-//         ]))
-//   }
-// }
