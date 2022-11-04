@@ -1,10 +1,18 @@
 import 'dart:convert';
 import 'dart:async';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:samples/firebase_options.dart';
 import 'package:samples/sample.dart';
 import 'package:flutter/services.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const App());
 }
 
@@ -12,6 +20,9 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey = GlobalKey<Sca
 
 class App extends StatelessWidget {
   const App({Key? key}) : super(key: key);
+
+  static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +43,8 @@ class App extends StatelessWidget {
       ),
       home: HomePage(
         theme: theme,
+        analytics: analytics,
+        observer: observer,
         searchParam: Uri.base.queryParameters["q"] ?? '',
       ),
     );
@@ -42,10 +55,14 @@ class HomePage extends StatefulWidget {
   const HomePage({
     Key? key,
     required this.theme,
-    this.searchParam = '',
+    required this.analytics,
+    required this.observer,
+    required this.searchParam,
   }) : super(key: key);
 
   final ThemeData theme;
+  final FirebaseAnalytics analytics;
+  final FirebaseAnalyticsObserver observer;
   final String? searchParam;
 
   @override
@@ -79,7 +96,7 @@ class _HomePageState extends State<HomePage> {
 
   void searchData(String searchTerm) {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
       final filteredList = sampleList
           .where((s) =>
               s.element.toLowerCase().contains(searchTerm) ||
@@ -87,6 +104,12 @@ class _HomePageState extends State<HomePage> {
               s.sampleLibrary.toLowerCase().contains(searchTerm) ||
               s.description.toLowerCase().contains(searchTerm))
           .toList();
+      await widget.analytics.logEvent(
+        name: 'search samples',
+        parameters: <String, dynamic>{
+          'searchTerm': searchTerm,
+        },
+      );
       setState(() {
         searchList = filteredList;
       });
@@ -151,7 +174,14 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (context, index) {
                             final sample = searchList[index];
                             return Align(
-                              child: SizedBox(width: maxWidth, child: SampleRow(sample: sample)),
+                              child: SizedBox(
+                                width: maxWidth,
+                                child: SampleRow(
+                                  sample: sample,
+                                  analytics: widget.analytics,
+                                  observer: widget.observer,
+                                ),
+                              ),
                             );
                           }),
                     )
@@ -174,7 +204,12 @@ class SampleRow extends StatefulWidget {
   const SampleRow({
     Key? key,
     required this.sample,
+    required this.analytics,
+    required this.observer,
   }) : super(key: key);
+
+  final FirebaseAnalytics analytics;
+  final FirebaseAnalyticsObserver observer;
 
   final Sample sample;
 
@@ -259,11 +294,17 @@ class _SampleRowState extends State<SampleRow> {
               ),
             ),
             child: InkWell(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: widget.sample.id)).then((_) {
+              onTap: () async {
+                Clipboard.setData(ClipboardData(text: widget.sample.id)).then((_) async {
                   rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
                   rootScaffoldMessengerKey.currentState!
                       .showSnackBar(SnackBar(content: Text("🔗 ${widget.sample.id} copied to your clipboard")));
+                  await widget.analytics.logEvent(
+                    name: 'copy id',
+                    parameters: <String, dynamic>{
+                      'sample-id': widget.sample.id,
+                    },
+                  );
                 });
               },
               child: Row(
@@ -294,10 +335,16 @@ class _SampleRowState extends State<SampleRow> {
             ),
             child: InkWell(
               onTap: () {
-                Clipboard.setData(ClipboardData(text: createFlutterSampleCmd)).then((_) {
+                Clipboard.setData(ClipboardData(text: createFlutterSampleCmd)).then((_) async {
                   rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
                   rootScaffoldMessengerKey.currentState!.showSnackBar(
                       SnackBar(content: Text("👉 Flutter command for `${widget.sample.id}` copied to your clipboard")));
+                  await widget.analytics.logEvent(
+                    name: 'copy command',
+                    parameters: <String, dynamic>{
+                      'sample-id': widget.sample.id,
+                    },
+                  );
                 });
               },
               child: Row(
