@@ -13,6 +13,7 @@ dependencies:
   firebase_core: ^2.1.1
   flutter:
     sdk: flutter
+  url_launcher: ^6.1.6
 
 dev_dependencies:
   flutter_lints: ^2.0.1
