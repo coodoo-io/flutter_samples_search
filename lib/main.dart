@@ -3,10 +3,11 @@ import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:samples/library_chips.dart';
 import 'package:samples/firebase_options.dart';
+import 'package:samples/library_chips.dart';
 import 'package:samples/sample.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -219,6 +220,7 @@ class _HomePageState extends State<HomePage> {
               searchList.isNotEmpty
                   ? Flexible(
                       child: ListView.builder(
+                          shrinkWrap: true,
                           itemCount: searchList.length,
                           primary: false,
                           itemBuilder: (context, index) {
@@ -235,8 +237,37 @@ class _HomePageState extends State<HomePage> {
                             );
                           }),
                     )
-                  : const Padding(padding: EdgeInsets.only(top: 10), child: Center(child: Text('No results.')))
+                  : const Padding(padding: EdgeInsets.only(top: 10), child: Center(child: Text('No results.'))),
             ],
+          ),
+        ),
+      ),
+      bottomSheet: Container(
+        height: 40.0,
+        alignment: Alignment.center,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                InkWell(
+                  child: const Text('Twitter @coodoo_io'),
+                  onTap: () async => await launchUrl(
+                    Uri(scheme: 'https', host: 'www.twitter.com', path: 'coodoo_io'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+                InkWell(
+                  child: const Text('Imprint'),
+                  onTap: () async => await launchUrl(
+                    Uri(scheme: 'https', host: 'www.coodoo.de', path: 'impressum'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
