@@ -217,6 +217,7 @@ class _HomePageState extends State<HomePage> {
                   onSelected: (index, value) => setLibrary(index, value),
                 ),
               ),
+              const SizedBox(height: 16),
               searchList.isNotEmpty
                   ? Flexible(
                       child: ListView.builder(
@@ -242,35 +243,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      bottomSheet: Container(
-        height: 40.0,
-        alignment: Alignment.center,
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                InkWell(
-                  child: const Text('Twitter @coodoo_io'),
-                  onTap: () async => await launchUrl(
-                    Uri(scheme: 'https', host: 'www.twitter.com', path: 'coodoo_io'),
-                    mode: LaunchMode.externalApplication,
-                  ),
-                ),
-                InkWell(
-                  child: const Text('Imprint'),
-                  onTap: () async => await launchUrl(
-                    Uri(scheme: 'https', host: 'www.coodoo.de', path: 'impressum'),
-                    mode: LaunchMode.externalApplication,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      bottomSheet: Footer(maxWidth: maxWidth),
     );
   }
 
@@ -278,6 +251,56 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _debounce?.cancel();
     super.dispose();
+  }
+}
+
+class Footer extends StatelessWidget {
+  const Footer({
+    Key? key,
+    required this.maxWidth,
+  }) : super(key: key);
+
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 40.0,
+      alignment: Alignment.center,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              InkWell(
+                child: Text(
+                  '@coodoo_io',
+                  style: theme.textTheme.caption?.copyWith(fontSize: 11),
+                ),
+                onTap: () async => await launchUrl(
+                  Uri(scheme: 'https', host: 'www.twitter.com', path: 'coodoo_io'),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+              InkWell(
+                child: Text(
+                  'Imprint',
+                  style: theme.textTheme.caption?.copyWith(fontSize: 11),
+                ),
+                onTap: () async => await launchUrl(
+                  Uri(scheme: 'https', host: 'www.coodoo.de', path: 'impressum'),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
