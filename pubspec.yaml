@@ -1,9 +1,9 @@
-name: samples
-description: A new Flutter project.
+name: flutter_samples_search
+description: Flutter Samples Search
 
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 0.1.1
+version: 0.1.2
 
 environment:
   sdk: ">=2.16.2 <3.0.0"
