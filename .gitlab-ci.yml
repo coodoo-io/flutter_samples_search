@@ -1,0 +1,109 @@
+image: cirrusci/flutter:3.3.6
+
+cache:
+  paths:
+    - /flutter/bin/cache/dart-sdk
+
+include:
+  - template: 'Workflows/Branch-Pipelines.gitlab-ci.yml'
+
+stages:
+  - check
+  - test
+  - build
+  - release
+
+# Check app for format and lint exceptions (fail fast)
+Check App:
+  stage: check
+  except:
+    - main
+  before_script:  
+    - flutter --version
+  script:
+    - make format
+    - make clean
+    - make lint
+
+# Check code quality
+code_quality:
+  stage: test
+  except:
+    - main
+  before_script:
+    - export PATH="$PATH":"$HOME/.pub-cache/bin"
+    - flutter pub global activate dart_code_metrics
+  script:
+    - metrics lib -r codeclimate  > gl-code-quality-report.json
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+
+# Run tests and report quality
+Test:
+  stage: test
+  except:
+    - main
+  before_script:
+    - export PATH="$PATH":"$HOME/.pub-cache/bin"
+    - flutter pub global activate junitreport
+  script:
+    - flutter test --machine --coverage | tojunit -o report.xml
+    - lcov --summary coverage/lcov.info
+    - genhtml coverage/lcov.info --output=coverage
+  coverage: '/lines\.*: \d+\.\d+\%/'
+  artifacts:
+    name: coverage
+    paths:
+      - $CI_PROJECT_DIR/coverage
+    reports:
+      junit: report.xml
+
+# Build Android (.apk):
+#   stage: build
+#   tags:
+#     - Flutter
+#   except:
+#     - main
+#   script:
+#     - make build-android-apk
+#   dependencies:
+#     - Check App
+#   artifacts:
+#     expire_in: 2 days
+#     paths:
+#       - dist/app.apk
+
+# Build Android (.aab):
+#   stage: build
+#   tags:
+#     - Flutter
+#   only:
+#     - tags
+#   script:
+#     - make build-android-aab
+#   artifacts:
+#     expire_in: 2 days
+#     paths:
+#       - dist/app.aab
+
+# Release:
+#   image: eslimaf/docker-android-fastlane
+#   stage: release
+#   only:
+#     - tags
+#   tags:
+#     - Flutter
+#   variables:
+#     BUNDLER_VERSION: 2.2.4
+#   dependencies:
+#     - Build Android (.aab)
+#   script:
+#     - mv $ANDROID_JSON assets/keys/android.json
+#     - cd android
+#     - gem update --system
+#     - gem install bundler
+#     - sudo chown -R circleci:circleci /home/circleci/.rubies/ruby-2.4.1/lib/ruby/gems/2.4.0/extensions/x86_64-linux
+#     - bundle install
+#     - echo "Releasing AppBundle"
+#     - bundle exec fastlane deploy --verbose

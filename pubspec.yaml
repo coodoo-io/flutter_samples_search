@@ -6,21 +6,60 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 0.1.2
 
 environment:
-  sdk: ">=2.16.2 <3.0.0"
+  sdk: ">=2.18.2 <3.0.0"
+  flutter: ^3.3.6
 
 dependencies:
-  firebase_analytics: ^10.0.3
-  firebase_core: ^2.1.1
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.17.0 # Localized date/number formatting  
+  go_router: ^5.1.1
+  flutter_riverpod: ^2.1.1 # State Management + Dependency Injection
+  logging: ^1.1.0 # Dart Logging
+  logging_appenders: ^1.0.0 # Send Logs to Console, File or API
+  device_info_plus: ^8.0.0 # User-Agent of Device
+  package_info_plus: ^3.0.1 # Show App Version in App
+  riverpod_annotation: ^1.0.6 # @riverpod
+  freezed_annotation: ^2.2.0 # @freezed
+  json_annotation: ^4.7.0 # @JsonSerializable
   url_launcher: ^6.1.6
+  firebase_analytics: ^10.0.3
+  firebase_core: ^2.1.1
+  envied: ^0.2.3 # @Envied
 
 dev_dependencies:
-  flutter_lints: ^2.0.1
   flutter_test:
     sdk: flutter
+  build_runner: # Generating files with dart
+  mocktail: ^0.3.0 # Testing with Mocks (no code-generation needed)
+  flutter_lints: ^2.0.1
+  freezed: ^2.2.1 # @freezed scanner (immutable data classes + unions)
+  json_serializable: ^6.5.4 # @JsonSerializable scanner (json parser)
+  riverpod_generator: ^1.0.6 # @riverpod scanner (state-management)
+  envied_generator: ^0.2.3 # @Envied scanner (.env config files)
+
+dependency_overrides:
+  analyzer: ^5.2.0
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/
+    - assets/samples/ # .json samples
+    - assets/images/ # .png/.jpg images
+    - assets/icons/ # .svg icons
+    - assets/fonts/ # Custom Fonts
+    - assets/app_icon/ # Generate App icon + Splashscreen
+
+  # fonts:
+  #   - family: OpenSans
+  #     fonts:
+  #       - asset: assets/fonts/OpenSans-Regular.ttf
+  #         weight: 400
+  #       - asset: assets/fonts/OpenSans-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/OpenSans-Bold.ttf
+  #         weight: 700
