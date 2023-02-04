@@ -1,4 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:samples/sample.dart';
+import 'package:samples/src/features/samples/domain/samples.service.dart';
 import 'package:samples/src/features/samples/presentation/providers/samples.controller.dart';
 
 part 'library.controller.g.dart';
@@ -7,20 +9,19 @@ part 'library.controller.g.dart';
 class LibraryController extends _$LibraryController {
   @override
   Map<String, bool> build() {
-    return {
-      'material': false,
-      'widgets': false,
-      'cupertino': false,
-      'dart:ui': false,
-      'services': false,
-      'rendering': false,
-      'chip': false,
-      'focus_manager': false,
-      'painting': false,
-      'animation': false,
-      'gestures': false,
-      'scrollbar': false,
-    };
+    getLibraries();
+    return {};
+  }
+
+  Future<void> getLibraries() async {
+    Map<String, bool> libraries = {};
+    List<Sample> samples = await ref.read(samplesServiceProvider).getSamples();
+    for (Sample sample in samples) {
+      if (!libraries.keys.contains(sample.sampleLibrary)) {
+        libraries.addAll({sample.sampleLibrary: false});
+      }
+    }
+    state = libraries;
   }
 
   Future<void> setLibrary(String libraryName, String searchTerm) async {

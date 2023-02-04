@@ -17,6 +17,7 @@ class Sample {
     required this.copyright,
     required this.description,
     required this.file,
+    required this.runCommand,
   });
 
   final String id;
@@ -30,6 +31,7 @@ class Sample {
   final dynamic copyright;
   final String description;
   final String file;
+  final String runCommand;
 
   factory Sample.fromRawJson(String str) => Sample.fromJson(json.decode(str));
 
@@ -47,6 +49,8 @@ class Sample {
         copyright: json['copyright'],
         description: json['description'].replaceAll('\n', ' '),
         file: json['file'],
+        runCommand:
+            'flutter create --sample=${json['id']} ${json['element'].toLowerCase()}${json['id'].substring(json['id'].length - 1)}',
       );
 
   Map<String, dynamic> toJson() => {
@@ -61,5 +65,6 @@ class Sample {
         'copyright': copyright,
         'description': description,
         'file': file,
+        'runCommand': runCommand,
       };
 }
