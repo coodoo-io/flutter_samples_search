@@ -47,7 +47,7 @@ class Sample {
         package: json['package'],
         sampleLibrary: json['library'],
         copyright: json['copyright'],
-        description: json['description'].replaceAll('\n', ' '),
+        description: json['description'].replaceAll('\n', ' ').replaceAll('[', '').replaceAll(']', ''),
         file: json['file'],
         runCommand:
             'flutter create --sample=${json['id']} ${json['element'].toLowerCase()}${json['id'].substring(json['id'].length - 1)}',
