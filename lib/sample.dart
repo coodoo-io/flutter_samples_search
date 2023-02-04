@@ -45,7 +45,7 @@ class Sample {
         package: json['package'],
         sampleLibrary: json['library'],
         copyright: json['copyright'],
-        description: json['description'].replaceAll('\n', ' '),
+        description: json['description'].replaceAll('\n', ' ').replaceAll('[', '').replaceAll(']', ''),
         file: json['file'],
       );
 
