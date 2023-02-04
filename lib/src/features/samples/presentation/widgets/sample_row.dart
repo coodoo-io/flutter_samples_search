@@ -16,8 +16,6 @@ class SampleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var createFlutterSampleCmd =
-        'flutter create --sample=${sample.id} ${sample.element.toLowerCase()}${sample.id.substring(sample.id.length - 1)}';
     final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(top: 20, left: 3, right: 3),
@@ -140,7 +138,7 @@ class SampleRow extends StatelessWidget {
             ),
             child: InkWell(
               onTap: () {
-                Clipboard.setData(ClipboardData(text: createFlutterSampleCmd)).then((_) async {
+                Clipboard.setData(ClipboardData(text: sample.runCommand)).then((_) async {
                   rootScaffoldMessengerKey.currentState!.removeCurrentSnackBar();
                   rootScaffoldMessengerKey.currentState!.showSnackBar(
                     SnackBar(content: Text('👉 Flutter command for `${sample.id}` copied to your clipboard')),
@@ -163,7 +161,7 @@ class SampleRow extends StatelessWidget {
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
-                      createFlutterSampleCmd,
+                      sample.runCommand,
                       style: const TextStyle(
                         fontFamily: 'monospace',
                         letterSpacing: .5,
