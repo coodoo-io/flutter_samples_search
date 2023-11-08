@@ -4,7 +4,7 @@ import 'package:samples/src/core/widgets/loading.dart';
 import 'package:samples/src/features/samples/presentation/providers/library.controller.dart';
 import 'package:samples/src/features/samples/presentation/providers/samples.controller.dart';
 import 'package:samples/src/features/samples/presentation/providers/samples_search.controller.dart';
-import 'package:samples/src/features/samples/presentation/widgets/library_chips.dart';
+import 'package:samples/src/features/samples/presentation/widgets/library_chips_list.dart';
 import 'package:samples/src/features/samples/presentation/widgets/samples_list.dart';
 import 'package:samples/src/features/samples/presentation/widgets/samples_search.dart';
 
